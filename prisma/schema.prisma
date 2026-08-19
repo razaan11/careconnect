@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(DONOR)
+  phone        String?
+  address      String?
+  lat          Float?
+  lng          Float?
+  isVerified   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  donations        Donation[]        @relation("DonorDonations")
+  trust            Trust?
+  volunteerProfile VolunteerProfile?
+}
+
+enum Role {
+  DONOR
+  TRUST
+  VOLUNTEER
+  ADMIN
+}
+
+model Trust {
+  id         String    @id @default(cuid())
+  userId     String    @unique
+  user       User      @relation(fields: [userId], references: [id])
+  orgName    String
+  darpanId   String
+  landmark   String?
+  pincode    String?
+  district   String?
+  state      String?
+  lat        Float?
+  lng        Float?
+  isVerified Boolean   @default(false)
+  verifiedAt DateTime?
+  verifiedBy String?
+  createdAt  DateTime  @default(now())
+
+  needs     TrustNeed[]
+  donations Donation[]  @relation("MatchedTrust")
+}
+
+model TrustNeed {
+  id          String       @id @default(cuid())
+  trustId     String
+  trust       Trust        @relation(fields: [trustId], references: [id])
+  type        DonationType
+  title       String
+  description String?
+  urgency     Urgency      @default(MEDIUM)
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+}
+
+enum Urgency {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Donation {
+  id             String         @id @default(cuid())
+  donorId        String
+  donor          User           @relation("DonorDonations", fields: [donorId], references: [id])
+  type           DonationType
+  title          String
+  description    String?
+  quantity       Int
+  unit           String
+  expiryDate     DateTime?
+  status         DonationStatus @default(PENDING)
+  photos         String[]
+  landmark       String?
+  pincode        String?
+  district       String?
+  state          String?
+  lat            Float?
+  lng            Float?
+  matchedTrustId String?
+  matchedTrust   Trust?         @relation("MatchedTrust", fields: [matchedTrustId], references: [id])
+  volunteerId    String?
+  pickupOtp      String?
+  deliveryOtp    String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  volunteer   VolunteerProfile? @relation(fields: [volunteerId], references: [id])
+  deliveryLog DeliveryLog?
+}
+
+enum DonationType {
+  FOOD
+  CLOTHES
+  BOOKS
+}
+
+enum DonationStatus {
+  PENDING
+  MATCHED
+  PICKUP_SCHEDULED
+  PICKED_UP
+  DELIVERED
+  EXPIRED
+}
+
+model VolunteerProfile {
+  id              String     @id @default(cuid())
+  userId          String     @unique
+  user            User       @relation(fields: [userId], references: [id])
+  vehicleType     String?
+  currentLat      Float?
+  currentLng      Float?
+  isAvailable     Boolean    @default(true)
+  totalDeliveries Int        @default(0)
+  donations       Donation[]
+}
+
+model DeliveryLog {
+  id            String    @id @default(cuid())
+  donationId    String    @unique
+  donation      Donation  @relation(fields: [donationId], references: [id])
+  volunteerId   String
+  status        String
+  photoProofUrl String?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+}
