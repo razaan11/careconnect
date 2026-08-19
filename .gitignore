@@ -1,20 +1,7 @@
-# dependencies
-node_modules/
-
-# environment secrets — never commit real credentials
-.env
-.env.*
-!.env.example
-
-# logs
-npm-debug.log*
-*.log
-
-# OS / editor
-.DS_Store
+# Each of backend/, frontend/, mobile/ has its own .gitignore covering
+# node_modules, .env, build output, etc. This one just covers repo-wide
+# editor/OS noise at the root.
 .vscode/*
 !.vscode/extensions.json
 .idea
-
-# Prisma
-prisma/*.db
+.DS_Store
