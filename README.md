@@ -37,3 +37,6 @@ npx expo start
 
 ## Stack
 Node/Express/Prisma/PostgreSQL backend · React/Vite/Tailwind frontend · Expo/React Native mobile app. See each subfolder's README for details.
+
+## Full documentation
+See [DOCUMENTATION.md](DOCUMENTATION.md) for the complete technical reference — database schema, the matching algorithm's exact scoring, the full API, what's real vs. simulated in NGO Darpan verification, known limitations, and demo credentials.
