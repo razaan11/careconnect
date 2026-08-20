@@ -40,3 +40,5 @@ Node/Express/Prisma/PostgreSQL backend · React/Vite/Tailwind frontend · Expo/R
 
 ## Full documentation
 See [DOCUMENTATION.md](DOCUMENTATION.md) for the complete technical reference — database schema, the matching algorithm's exact scoring, the full API, what's real vs. simulated in NGO Darpan verification, known limitations, and demo credentials.
+
+For a trace-through of how the actual code executes — the exact scoring formula, the auth middleware chain, how the multi-item cart holds state, request-by-request — see [CODE_WALKTHROUGH.md](CODE_WALKTHROUGH.md).
