@@ -30,7 +30,7 @@ async function getStats(req, res) {
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
 
-    const [totalDonations, activeTrusts, pendingVerifications, activeVolunteers, deliveredToday] =
+    const [totalDonations, activeTrusts, pendingVerifications, activeVolunteers, deliveredToday, statusGroups] =
       await Promise.all([
         prisma.donation.count(),
         prisma.trust.count({ where: { isVerified: true } }),
@@ -39,7 +39,14 @@ async function getStats(req, res) {
         prisma.donation.count({
           where: { status: 'DELIVERED', updatedAt: { gte: startOfToday } },
         }),
+        prisma.donation.groupBy({ by: ['status'], _count: { _all: true } }),
       ]);
+
+    const ALL_STATUSES = ['PENDING', 'MATCHED', 'PICKUP_SCHEDULED', 'PICKED_UP', 'DELIVERED', 'EXPIRED'];
+    const donationsByStatus = Object.fromEntries(ALL_STATUSES.map((s) => [s, 0]));
+    for (const group of statusGroups) {
+      donationsByStatus[group.status] = group._count._all;
+    }
 
     return res.json({
       totalDonations,
@@ -47,6 +54,7 @@ async function getStats(req, res) {
       pendingVerifications,
       activeVolunteers,
       deliveredToday,
+      donationsByStatus,
     });
   } catch (err) {
     console.error('[admin.getStats]', err);

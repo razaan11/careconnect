@@ -8,7 +8,7 @@ import { getToken } from './storage';
 //   - Android Emulator (AVD)   -> http://10.0.2.2:5000/api
 //   - Physical phone + Expo Go -> http://<your-computer's-LAN-IP>:5000/api
 //                                 e.g. http://192.168.1.42:5000/api
-export const API_BASE_URL = 'http://192.168.104.190:5000/api';
+export const API_BASE_URL = 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

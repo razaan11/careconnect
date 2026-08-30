@@ -40,6 +40,24 @@ async function registerVolunteer(req, res) {
 }
 
 /**
+ * Returns the caller's own VolunteerProfile — used by the web
+ * dashboard's activity/stats view (actual pickup actions stay
+ * mobile-only, but web can show progress read-only).
+ */
+async function getMyProfile(req, res) {
+  try {
+    const volunteerProfile = await prisma.volunteerProfile.findUnique({ where: { userId: req.user.id } });
+    if (!volunteerProfile) {
+      return res.status(404).json({ error: 'No volunteer profile found for this user' });
+    }
+    return res.json({ volunteerProfile });
+  } catch (err) {
+    console.error('[volunteers.getMyProfile]', err);
+    return res.status(500).json({ error: 'Failed to load volunteer profile' });
+  }
+}
+
+/**
  * Lists donations that are MATCHED and not yet claimed by a
  * volunteer, sorted by distance from the given lat/lng query params
  * (nearest first). Each donation gets a `distanceKm` field attached.
@@ -142,4 +160,4 @@ async function getHistory(req, res) {
   }
 }
 
-module.exports = { registerVolunteer, listPickups, acceptPickup, getHistory };
+module.exports = { registerVolunteer, getMyProfile, listPickups, acceptPickup, getHistory };

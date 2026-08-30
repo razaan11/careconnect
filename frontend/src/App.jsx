@@ -1,7 +1,8 @@
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
-import { RequireAuth, RequireRole, RoleHomeRedirect } from './components/RouteGuards'
+import { RequireAuth, RequireRole } from './components/RouteGuards'
 
+import Home from './pages/Home'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import NotFound from './pages/NotFound'
@@ -22,12 +23,11 @@ import TrustVerification from './pages/admin/TrustVerification'
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
       <Route element={<RequireAuth />}>
-        <Route path="/" element={<RoleHomeRedirect />} />
-
         <Route element={<Layout />}>
           <Route path="/volunteer-info" element={<VolunteerInfo />} />
 

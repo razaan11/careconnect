@@ -1,6 +1,7 @@
 const express = require('express');
 const {
   registerVolunteer,
+  getMyProfile,
   listPickups,
   acceptPickup,
   getHistory,
@@ -10,6 +11,8 @@ const { authenticate, authorize } = require('../middleware/auth');
 const router = express.Router();
 
 router.post('/register', authenticate, authorize('VOLUNTEER'), registerVolunteer);
+
+router.get('/me', authenticate, authorize('VOLUNTEER'), getMyProfile);
 
 router.get('/pickups', authenticate, authorize('VOLUNTEER'), listPickups);
 

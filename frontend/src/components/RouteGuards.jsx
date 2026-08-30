@@ -27,11 +27,3 @@ export function RequireRole({ role }) {
   return <Outlet />
 }
 
-export function RoleHomeRedirect() {
-  const token = localStorage.getItem('careconnect_token')
-  const user = getStoredUser()
-  if (!token || !user) {
-    return <Navigate to="/login" replace />
-  }
-  return <Navigate to={ROLE_HOME[user.role] || '/login'} replace />
-}
