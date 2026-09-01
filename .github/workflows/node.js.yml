@@ -1,0 +1,79 @@
+# CareConnect is a monorepo (backend/, frontend/, mobile/), each with
+# its own package.json and package-lock.json — there is no root-level
+# one, so each subproject gets its own job with its own dependency
+# cache path. No automated test suite exists yet (backend's "test"
+# script is just the unmodified npm-init placeholder, and frontend has
+# none), so this checks that each subproject installs cleanly and
+# actually builds/generates rather than pretending to run tests that
+# don't exist.
+
+name: Node.js CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+    env:
+      # Prisma needs DATABASE_URL to be set to generate the client,
+      # even though generate itself never connects to a real database.
+      DATABASE_URL: "postgresql://user:password@localhost:5432/careconnect"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: node --check src/app.js
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+      # legacy-peer-deps=true is already set in mobile/.npmrc — Expo
+      # Router's optional web dev-tools pull in a newer React peer
+      # than this app is pinned to, unrelated to anything it uses.
+      - run: npm ci
+      - run: npx expo-doctor
