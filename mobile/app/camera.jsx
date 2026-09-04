@@ -75,8 +75,13 @@ export default function CameraScreen() {
 
       setStage(STAGE.SUCCESS);
     } catch (err) {
+      // The backend always returns { error: "..." } on failure, never
+      // { message: "..." } — reading .message here silently swallowed the
+      // real reason (wrong OTP, wrong volunteer, etc.) behind a generic
+      // "check your connection" message on every failure, network or not.
       setErrorMessage(
-        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+          err?.response?.data?.message ||
           'Could not confirm this delivery. Check your connection and try again.'
       );
       setStage(STAGE.ERROR);
