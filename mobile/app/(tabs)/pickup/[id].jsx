@@ -109,7 +109,16 @@ export default function PickupDetailScreen() {
                 <Ionicons name="business-outline" size={16} color={colors.primary} />
                 <Text style={styles.infoText}>{donation.matchedTrust?.orgName || 'Matched trust pending'}</Text>
               </View>
-              {typeof donation.lat === 'number' && typeof donation.lng === 'number' ? (
+              {(donation.landmark || donation.pincode || donation.district || donation.state) ? (
+                <View style={styles.infoLine}>
+                  <Ionicons name="location-outline" size={16} color={colors.muted} />
+                  <Text style={styles.infoTextMuted}>
+                    {[donation.landmark, donation.district, donation.state, donation.pincode]
+                      .filter(Boolean)
+                      .join(', ')}
+                  </Text>
+                </View>
+              ) : typeof donation.lat === 'number' && typeof donation.lng === 'number' ? (
                 <View style={styles.infoLine}>
                   <Ionicons name="location-outline" size={16} color={colors.muted} />
                   <Text style={styles.infoTextMuted}>

@@ -41,6 +41,14 @@ export default function PickupCard({ donation, onAccept, accepting, onPress }) {
             {donation.description}
           </Text>
         ) : null}
+        {(donation.landmark || donation.district) ? (
+          <View style={styles.addressRow}>
+            <Ionicons name="location-outline" size={13} color={colors.muted} />
+            <Text style={styles.addressText} numberOfLines={1}>
+              {[donation.landmark, donation.district].filter(Boolean).join(', ')}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.perforationRow}>
@@ -108,6 +116,8 @@ const styles = StyleSheet.create({
   title: { marginBottom: 2 },
   quantity: { fontSize: 14, fontWeight: '700', color: colors.primary, marginBottom: 4 },
   description: { fontSize: 13.5, color: colors.muted, lineHeight: 18 },
+  addressRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
+  addressText: { fontSize: 12.5, color: colors.muted, flexShrink: 1 },
   perforationRow: {
     flexDirection: 'row',
     alignItems: 'center',
