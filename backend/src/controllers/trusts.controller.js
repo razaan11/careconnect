@@ -203,9 +203,16 @@ async function deleteNeed(req, res) {
 }
 
 /**
- * TRUST only. Generates a pickup OTP for a donation matched to the
- * caller's trust, saves it, and (best-effort) emails it to the
- * assigned volunteer if one exists yet.
+ * TRUST only. Reveals the delivery OTP for a donation matched to the
+ * caller's trust — this is the code actually checked server-side in
+ * POST /donations/:id/confirm-delivery, normally auto-generated the
+ * moment a volunteer accepts the pickup (see acceptPickup in
+ * volunteers.controller.js). This endpoint hands that existing code
+ * to the trust so they can read it aloud to the volunteer at
+ * hand-off; it only generates a fresh one if none exists yet (e.g.
+ * no volunteer has accepted this pickup), rather than always
+ * rotating it and potentially invalidating a code the volunteer
+ * already has.
  */
 async function generateOTP(req, res) {
   try {
@@ -225,18 +232,17 @@ async function generateOTP(req, res) {
       return res.status(404).json({ error: 'Donation not found for this trust' });
     }
 
-    const pickupOtp = generateOtpCode();
-
-    const updated = await prisma.donation.update({
-      where: { id: donationId },
-      data: { pickupOtp },
-    });
-
-    if (donation.volunteer && donation.volunteer.user && donation.volunteer.user.email) {
-      await sendOTPEmail(donation.volunteer.user.email, pickupOtp, 'pickup');
+    let deliveryOtp = donation.deliveryOtp;
+    if (!deliveryOtp) {
+      deliveryOtp = generateOtpCode();
+      await prisma.donation.update({ where: { id: donationId }, data: { deliveryOtp } });
     }
 
-    return res.json({ pickupOtp: updated.pickupOtp });
+    if (donation.volunteer && donation.volunteer.user && donation.volunteer.user.email) {
+      await sendOTPEmail(donation.volunteer.user.email, deliveryOtp, 'delivery');
+    }
+
+    return res.json({ deliveryOtp });
   } catch (err) {
     console.error('[trusts.generateOTP]', err);
     return res.status(500).json({ error: 'Failed to generate OTP' });

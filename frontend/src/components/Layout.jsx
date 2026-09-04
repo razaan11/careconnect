@@ -10,7 +10,7 @@ const NAV_BY_ROLE = {
   TRUST: [
     { to: '/trust', label: 'Dashboard', end: true },
     { to: '/trust/needs/new', label: 'Post a need' },
-    { to: '/trust/otp', label: 'Generate OTP' },
+    { to: '/trust/otp', label: 'Delivery OTP' },
   ],
   VOLUNTEER: [{ to: '/volunteer-info', label: 'Volunteer' }],
   ADMIN: [

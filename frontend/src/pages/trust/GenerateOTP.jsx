@@ -15,7 +15,7 @@ export default function GenerateOTP() {
     setErrorFor(null)
     generateOtp.mutate(donation.id, {
       onSuccess: (data) => {
-        setModal({ title: donation.title, otp: data.pickupOtp })
+        setModal({ title: donation.title, otp: data.deliveryOtp })
       },
       onError: () => {
         setErrorFor(donation.id)
@@ -23,7 +23,14 @@ export default function GenerateOTP() {
     })
   }
 
-  const eligible = donations?.filter((d) => !['DELIVERED', 'EXPIRED'].includes(d.status)) || []
+  // The delivery OTP only exists once a volunteer has accepted the
+  // pickup — it's the code actually checked when they confirm
+  // delivery, so it stays viewable the whole time a pickup is in
+  // progress, not just at the very start.
+  const eligible =
+    donations?.filter((d) =>
+      ['MATCHED', 'PICKUP_SCHEDULED', 'PICKED_UP'].includes(d.status)
+    ) || []
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -34,9 +41,9 @@ export default function GenerateOTP() {
       <p className="mt-4 font-mono text-xs uppercase tracking-widest text-primary/60">
         Pickup verification
       </p>
-      <h1 className="mt-1 font-display text-2xl font-semibold text-text">Generate a pickup OTP</h1>
+      <h1 className="mt-1 font-display text-2xl font-semibold text-text">Delivery OTP</h1>
       <p className="mt-1 text-sm text-text/60">
-        Share the code with your assigned volunteer — they’ll enter it to confirm handoff.
+        Read this code aloud to your volunteer at handoff — they'll enter it to confirm delivery.
       </p>
 
       <div className="mt-8">
@@ -45,14 +52,14 @@ export default function GenerateOTP() {
         {!isLoading && eligible.length === 0 && (
           <EmptyState
             title="Nothing to schedule"
-            body="Once a donation is matched to your trust, it will show up here so you can generate a pickup OTP."
+            body="Once a donation is matched to your trust, it will show up here so you can view its delivery OTP."
           />
         )}
 
         {!isLoading && eligible.length > 0 && (
           <ul className="space-y-3">
             {eligible.map((donation) => {
-              const canGenerate = donation.status === 'MATCHED'
+              const canGenerate = true
               const isThisPending = generateOtp.isPending && generateOtp.variables === donation.id
               return (
                 <li
@@ -79,11 +86,7 @@ export default function GenerateOTP() {
                     disabled={!canGenerate || isThisPending}
                     className="focus-ring rounded-lg border border-primary px-3.5 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:border-hairline disabled:text-text/30 disabled:hover:bg-transparent"
                   >
-                    {isThisPending
-                      ? 'Generating…'
-                      : canGenerate
-                      ? 'Generate OTP'
-                      : 'Already scheduled'}
+                    {isThisPending ? 'Loading…' : 'View delivery OTP'}
                   </button>
                 </li>
               )
@@ -105,7 +108,7 @@ export default function GenerateOTP() {
             onClick={(e) => e.stopPropagation()}
           >
             <p className="font-mono text-[11px] uppercase tracking-widest text-primary/60">
-              Pickup OTP issued
+              Delivery OTP
             </p>
             <h2 id="otp-modal-title" className="mt-1 font-display text-lg font-medium text-text">
               {modal.title}
@@ -114,7 +117,8 @@ export default function GenerateOTP() {
               {modal.otp}
             </p>
             <p className="mt-6 text-sm text-text/60">
-              Give this code to your volunteer. They’ll use it to confirm the handoff on pickup.
+              Read this code to your volunteer when they arrive with the donation — they'll enter
+              it in the app to confirm delivery.
             </p>
             <button
               type="button"
