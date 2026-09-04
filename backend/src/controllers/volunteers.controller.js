@@ -61,6 +61,16 @@ async function getMyProfile(req, res) {
  * Lists donations that are MATCHED and not yet claimed by a
  * volunteer, sorted by distance from the given lat/lng query params
  * (nearest first). Each donation gets a `distanceKm` field attached.
+ *
+ * Also returns `active`: donations already accepted by the calling
+ * volunteer but not yet DELIVERED (PICKUP_SCHEDULED / PICKED_UP).
+ * Without this, a donation the volunteer accepted has no query that
+ * ever surfaces it again — it's not MATCHED+unclaimed any more (so it
+ * drops out of `pickups`), and it's not DELIVERED yet (so it's not in
+ * history either). If something interrupts the hand-off/photo/confirm
+ * flow (e.g. a failed confirm-delivery call) and the volunteer leaves
+ * that screen, the donation was effectively stranded with no way back
+ * to it — this is what "the pickup I picked disappeared" was.
  */
 async function listPickups(req, res) {
   try {
@@ -77,19 +87,34 @@ async function listPickups(req, res) {
       return res.status(400).json({ error: 'lat and lng must be valid numbers' });
     }
 
-    const donations = await prisma.donation.findMany({
-      where: { status: 'MATCHED', volunteerId: null },
-      include: { donor: true, matchedTrust: true },
-    });
+    const volunteerProfile = await prisma.volunteerProfile.findUnique({ where: { userId: req.user.id } });
 
-    const withDistance = donations
-      .map((donation) => ({
+    const [available, mine] = await Promise.all([
+      prisma.donation.findMany({
+        where: { status: 'MATCHED', volunteerId: null },
+        include: { donor: true, matchedTrust: true },
+      }),
+      volunteerProfile
+        ? prisma.donation.findMany({
+            where: {
+              volunteerId: volunteerProfile.id,
+              status: { in: ['PICKUP_SCHEDULED', 'PICKED_UP'] },
+            },
+            include: { donor: true, matchedTrust: true },
+          })
+        : [],
+    ]);
+
+    const withDistance = (list) =>
+      list.map((donation) => ({
         ...donation,
         distanceKm: haversine(originLat, originLng, donation.lat, donation.lng),
-      }))
-      .sort((a, b) => a.distanceKm - b.distanceKm);
+      }));
 
-    return res.json({ pickups: withDistance });
+    return res.json({
+      pickups: withDistance(available).sort((a, b) => a.distanceKm - b.distanceKm),
+      active: withDistance(mine),
+    });
   } catch (err) {
     console.error('[volunteers.listPickups]', err);
     return res.status(500).json({ error: 'Failed to list pickups' });

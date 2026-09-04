@@ -28,6 +28,10 @@ export default function PickupsScreen() {
   const router = useRouter();
   const [stage, setStage] = useState(STAGE.LOADING);
   const [pickups, setPickups] = useState([]);
+  // Donations already accepted by this volunteer but not yet delivered —
+  // e.g. the hand-off code was entered but the photo/confirm step failed
+  // or was backed out of. Without this list there was no way back to them.
+  const [activePickups, setActivePickups] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [acceptingId, setAcceptingId] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -61,6 +65,7 @@ export default function PickupsScreen() {
       });
 
       setPickups(sorted);
+      setActivePickups(data?.active || []);
       setStage(STAGE.READY);
     } catch (err) {
       setErrorMessage(
@@ -98,6 +103,27 @@ export default function PickupsScreen() {
       setAcceptingId(null);
     }
   }
+
+  function handleResume(donation) {
+    // Already accepted — just go straight back to the hand-off/OTP screen,
+    // no accept call needed.
+    router.push({
+      pathname: '/(tabs)/pickup/[id]',
+      params: { id: String(donation.id), donation: JSON.stringify(donation) },
+    });
+  }
+
+  const activeSection =
+    activePickups.length > 0 ? (
+      <View style={styles.activeSection}>
+        <Text style={styles.activeSectionLabel}>
+          Continue delivery — already accepted, not yet delivered
+        </Text>
+        {activePickups.map((donation) => (
+          <PickupCard key={donation.id} donation={donation} onPress={() => handleResume(donation)} />
+        ))}
+      </View>
+    ) : null;
 
   return (
     <View style={styles.screen}>
@@ -144,6 +170,7 @@ export default function PickupsScreen() {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={() => loadPickups({ isRefresh: true })} tintColor={colors.primary} />
           }
+          ListHeaderComponent={activeSection}
           ListEmptyComponent={
             <EmptyState
               icon="checkmark-done-circle-outline"
@@ -163,12 +190,15 @@ export default function PickupsScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={() => loadPickups({ isRefresh: true })} tintColor={colors.primary} />
           }
           ListHeaderComponent={
-            errorMessage ? (
-              <View style={styles.inlineError}>
-                <Ionicons name="alert-circle" size={16} color={colors.error} />
-                <Text style={styles.inlineErrorText}>{errorMessage}</Text>
-              </View>
-            ) : null
+            <>
+              {activeSection}
+              {errorMessage ? (
+                <View style={styles.inlineError}>
+                  <Ionicons name="alert-circle" size={16} color={colors.error} />
+                  <Text style={styles.inlineErrorText}>{errorMessage}</Text>
+                </View>
+              ) : null}
+            </>
           }
           renderItem={({ item }) => (
             // Only the explicit "Accept" button triggers acceptance — the
@@ -196,6 +226,12 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   subtitle: { ...type.body, color: colors.muted, marginTop: spacing.xs },
+  activeSection: { marginBottom: spacing.lg },
+  activeSectionLabel: {
+    ...type.eyebrow,
+    color: colors.accent,
+    marginBottom: spacing.sm,
+  },
   centerFill: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 80 },
   loadingText: { ...type.body, color: colors.muted, marginTop: spacing.md },
   listContent: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxxl },
