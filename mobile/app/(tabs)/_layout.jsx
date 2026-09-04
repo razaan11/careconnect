@@ -1,8 +1,16 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, type } from '../../lib/theme';
 
 export default function TabsLayout() {
+  // A fixed bottom padding here overlaps the phone's own back/home
+  // buttons on devices with on-screen gesture/button navigation —
+  // `insets.bottom` is the actual reserved system-UI height for
+  // *this* device, 0 on phones that don't need it, ~20-48px on ones
+  // that do.
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
@@ -12,8 +20,8 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
-          height: 62,
-          paddingBottom: spacing.sm,
+          height: 62 + insets.bottom,
+          paddingBottom: insets.bottom + spacing.sm,
           paddingTop: spacing.xs,
         },
         tabBarLabelStyle: { fontSize: 11.5, fontWeight: '700' },

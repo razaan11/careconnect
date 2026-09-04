@@ -11,6 +11,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../lib/api';
 import PrimaryButton from '../components/PrimaryButton';
 import StampBadge from '../components/StampBadge';
@@ -29,6 +30,7 @@ export default function CameraScreen() {
   const { id, otp } = useLocalSearchParams();
   const router = useRouter();
   const cameraRef = useRef(null);
+  const insets = useSafeAreaInsets();
 
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState('back');
@@ -152,7 +154,7 @@ export default function CameraScreen() {
           <Text style={styles.previewLabel}>PROOF OF DELIVERY</Text>
           <Text style={styles.previewHint}>Make sure the items and the trust's space are clearly visible.</Text>
         </View>
-        <View style={styles.previewActions}>
+        <View style={[styles.previewActions, { bottom: 40 + insets.bottom }]}>
           <PrimaryButton
             label="Retake"
             onPress={handleRetake}
@@ -205,7 +207,7 @@ export default function CameraScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.bottomBar}>
+        <View style={[styles.bottomBar, { paddingBottom: 48 + insets.bottom }]}>
           <Text style={styles.captureHint}>Frame the donation and the trust's sign-in area</Text>
           <Pressable
             onPress={handleCapture}

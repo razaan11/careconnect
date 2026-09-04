@@ -23,6 +23,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../../components/PrimaryButton';
 import StampBadge from '../../../components/StampBadge';
 import { colors, donationTypeStyle, radii, shadow, spacing, type } from '../../../lib/theme';
@@ -33,6 +34,7 @@ const OTP_LENGTH = 6;
 export default function PickupDetailScreen() {
   const { id, donation: donationParam } = useLocalSearchParams();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const donation = safeParse(donationParam);
 
   const [otp, setOtp] = useState('');
@@ -82,7 +84,10 @@ export default function PickupDetailScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={[styles.scroll, { paddingBottom: spacing.xxxl + insets.bottom }]}
+        keyboardShouldPersistTaps="handled"
+      >
         <Animated.View style={{ opacity: fade }}>
           <View style={styles.header}>
             <Text style={type.eyebrow}>PICKUP #{id}</Text>

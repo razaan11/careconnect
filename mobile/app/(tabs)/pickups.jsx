@@ -171,11 +171,15 @@ export default function PickupsScreen() {
             ) : null
           }
           renderItem={({ item }) => (
+            // Only the explicit "Accept" button triggers acceptance — the
+            // card itself has no separate onPress. Passing the same handler
+            // to both used to mean a tap anywhere on the card *and* a tap on
+            // the button could each fire handleAccept, risking a double
+            // POST /accept for the same donation.
             <PickupCard
               donation={item}
               accepting={acceptingId === item.id}
               onAccept={() => handleAccept(item)}
-              onPress={() => handleAccept(item)}
             />
           )}
         />
